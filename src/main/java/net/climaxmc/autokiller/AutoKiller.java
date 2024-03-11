@@ -57,9 +57,16 @@ public class AutoKiller extends JavaPlugin {
     			.replace("%vl%", vl + "");
     	alert = ChatColor.translateAlternateColorCodes('&', alert);
 
-        for (Player players : Bukkit.getOnlinePlayers()) {
-            if (players.isOp() || players.hasPermission("autokiller.staff")) {
-                players.sendMessage(alert);                
+        if (config.getCustomCommand()) {
+            String command = config.getAlertCommand()
+                .replace("%player%", player.getName())
+                .replace("%alert%", alert);
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+        } else {
+            for (Player players : Bukkit.getOnlinePlayers()) {
+                if (players.isOp() || players.hasPermission("autokiller.staff")) {
+                    players.sendMessage(alert);                
+                }
             }
         }
         

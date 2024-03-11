@@ -17,6 +17,12 @@ ban-command: "ban %player% &6AutoKiller &f» &cUnfair Advantage"
 clickspeed-alert: "&8[&6AutoKiller&8] &c%player% &8[&e%ping%ms&8] &7is suspected for &c%cheat% &8[&b%vl% cps&8]"
 normal-alert: "&8[&6AutoKiller&8] &c%player% &8[&e%ping%ms&8] &7is suspected for &c%cheat% &7VL:%vl%"
 
+# Should alerts use a custom command?
+custom-command: false
+# The custom command alerts will use
+# Placeholders: %player%, %alert%
+alert-command: ""
+
 click-speed:
   vl-to-alert: 8
   vl-to-ban: 30

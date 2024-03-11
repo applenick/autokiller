@@ -86,6 +86,22 @@ public class Config {
         return (String) config.get("normal-alert");
     }
 
+    public boolean getCustomCommand() {
+        if (config.get("custom-command") == null) {
+            config.set("custom-command", false);
+            saveConfig();
+        }
+        return (boolean) config.get("custom-command");
+    }
+
+    public String getAlertCommand() {
+        if (config.get("alert-command") == null) {
+            config.set("alert-command", "");
+            saveConfig();
+        }
+        return (String) config.get("alert-command");
+    }
+
     public int getMaxSpeed() {
         if (config.get("click-speed.max-speed") == null) {
             config.set("click-speed.max-speed", 16);

@@ -8,16 +8,16 @@ import org.bukkit.event.HandlerList;
 
 public class PacketUseEntityEvent extends Event {
 
-    private EnumWrappers.EntityUseAction action;
-    private Player attacker;
-    private Entity attacked;
+    private final EnumWrappers.EntityUseAction action;
+    private final Player attacker;
+    private final Entity attacked;
     private static final HandlerList handlers = new HandlerList();
 
-    public PacketUseEntityEvent(EnumWrappers.EntityUseAction Action, Player Attacker, Entity Attacked)
+    public PacketUseEntityEvent(EnumWrappers.EntityUseAction action, Player attacker, Entity attacked)
     {
-        this.action = Action;
-        this.attacker = Attacker;
-        this.attacked = Attacked;
+        this.action = action;
+        this.attacker = attacker;
+        this.attacked = attacked;
     }
 
     public EnumWrappers.EntityUseAction getAction()
@@ -40,8 +40,7 @@ public class PacketUseEntityEvent extends Event {
         return handlers;
     }
 
-    public static HandlerList getHandlerList()
-    {
+    public static HandlerList getHandlerList() {
         return handlers;
     }
 }

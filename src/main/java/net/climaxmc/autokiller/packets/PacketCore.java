@@ -31,18 +31,21 @@ public class PacketCore {
                 }
                 EnumWrappers.EntityUseAction type = packet.getEntityUseActions().read(0);
                 int entityId = packet.getIntegers().read(0);
-                Entity entity = null;
-                for (World worlds : Bukkit.getWorlds()) {
-                    for (Entity entities : worlds.getEntities()) {
-                        if (entities.getEntityId() == entityId) {
-                            entity = entities;
+                // Run in main thread
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    Entity entity = null;
+                    for (World worlds : Bukkit.getWorlds()) {
+                        for (Entity entities : worlds.getEntities()) {
+                            if (entities.getEntityId() == entityId) {
+                                entity = entities;
+                            }
                         }
                     }
-                }
-                if (entity == null) {
-                    entity = player;
-                }
-                Bukkit.getServer().getPluginManager().callEvent(new PacketUseEntityEvent(type, player, entity));
+                    if (entity == null) {
+                        entity = player;
+                    }
+                    Bukkit.getServer().getPluginManager().callEvent(new PacketUseEntityEvent(type, player, entity));
+                });
             }
         });
 

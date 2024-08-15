@@ -2,23 +2,19 @@ package net.climaxmc.autokiller.checks;
 
 import net.climaxmc.autokiller.AutoKiller;
 import net.climaxmc.autokiller.packets.PacketBlockDigEvent;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class ZeroDelayCheck extends Check implements Listener {
 
-    private AutoKiller plugin;
     public ZeroDelayCheck(AutoKiller plugin) {
-        super(plugin, "Zero-Delay", true, 14, 30);
-
-        this.plugin = plugin;
+        super(plugin, "Zero-Delay");
 
         new BukkitRunnable() {
             @Override
@@ -40,54 +36,30 @@ public class ZeroDelayCheck extends Check implements Listener {
         }.runTaskTimer(plugin, 0L, 10L);
     }
 
-    private void checkForBan() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            UUID uuid = player.getUniqueId();
-            if (!isEnabled()) {
-                resetVL(uuid);
-                return;
-            }
-            if (getVL(uuid) >= plugin.config.getVLBan(this)) {
-                plugin.autoBanPlayer(uuid, "AutoBan", getName());
-                vls.put(uuid, 0);
-            }
-        }
-    }
-
-    private void checkForAlert() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            UUID uuid = player.getUniqueId();
-            if (!isEnabled()) {
-                resetVL(uuid);
-                return;
-            }
-            if (getVL(uuid) >= plugin.config.getVLAlert(this)) {
-                if (getLastVL(uuid) <= getVL(uuid)) {
-                    plugin.logCheat(uuid, getName(), getVL(uuid));
-                }
-            }
-        }
-    }
-
     /**
      * Zero Delay Check
      */
 
-    private HashMap<Player, Long> lastBlockTime = new HashMap<>();
-    private HashMap<Player, Location> lastBlockLocation = new HashMap<>();
+    private final Map<UUID, Long> lastBlockTime = new HashMap<>();
+    private final Map<UUID, Vector> lastBlockLocation = new HashMap<>();
 
     @EventHandler
     public void blockCheck(PacketBlockDigEvent event) {
-        Player player = event.getPlayer();
+        UUID uuid = event.getPlayer().getUniqueId();
+        long lastMs = lastBlockTime.getOrDefault(uuid,0L);
+        Vector lastBlock = lastBlockLocation.getOrDefault(uuid, null);
 
-        if (lastBlockTime.containsKey(player) && lastBlockLocation.containsKey(player)) {
-            if (lastBlockLocation.get(player).equals(event.getBlockLocation())) {
-                if (Math.abs(System.currentTimeMillis() - lastBlockTime.get(player)) == 0) {
-                    increaseVL(player.getUniqueId(), 1);
-                }
-            }
+        if (event.getBlockLocation().toVector().equals(lastBlock) && System.currentTimeMillis() == lastMs) {
+            increaseVL(uuid, 1);
         }
-        lastBlockTime.put(player, System.currentTimeMillis());
-        lastBlockLocation.put(player, event.getBlockLocation());
+        lastBlockTime.put(uuid, System.currentTimeMillis());
+        lastBlockLocation.put(uuid, event.getBlockLocation().toVector());
+    }
+
+    @Override
+    protected void cleanup(UUID uuid) {
+        super.cleanup(uuid);
+        lastBlockTime.remove(uuid);
+        lastBlockLocation.remove(uuid);
     }
 }

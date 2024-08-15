@@ -7,8 +7,8 @@ import org.bukkit.event.HandlerList;
 
 public class PacketBlockDigEvent extends Event {
 
-    private Player player;
-    private Location blockLocation;
+    private final Player player;
+    private final Location blockLocation;
     private static final HandlerList handlers = new HandlerList();
 
     public PacketBlockDigEvent(Player player, Location blockLocation)
@@ -31,8 +31,7 @@ public class PacketBlockDigEvent extends Event {
         return handlers;
     }
 
-    public static HandlerList getHandlerList()
-    {
+    public static HandlerList getHandlerList() {
         return handlers;
     }
 }

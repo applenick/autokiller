@@ -11,15 +11,13 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class ClickSpeedCheck extends Check implements Listener {
 
-    private AutoKiller plugin;
     public ClickSpeedCheck(AutoKiller plugin) {
-        super(plugin, "Click-Speed", true, 8, 30);
-
-        this.plugin = plugin;
+        super(plugin, "Click-Speed");
 
         new BukkitRunnable() {
             @Override
@@ -41,75 +39,50 @@ public class ClickSpeedCheck extends Check implements Listener {
         }.runTaskTimer(plugin, 0L, 20L * 3);
     }
 
-    private void checkForBan() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            UUID uuid = player.getUniqueId();
-            if (!isEnabled()) {
-                resetVL(uuid);
-                return;
-            }
-            if (getVL(uuid) >= plugin.config.getVLBan(this)) {
-                plugin.autoBanPlayer(uuid, "AutoBan", getName());
-                vls.put(uuid, 0);
-            }
-        }
-    }
-
-    private void checkForAlert() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            UUID uuid = player.getUniqueId();
-            if (!isEnabled()) {
-                resetVL(uuid);
-                return;
-            }
-            /*if (getVL(uuid) >= plugin.config.getVLAlert(this)) {
-                if (getLastVL(uuid) <= getVL(uuid)) {
-                    plugin.logCheat(uuid, getName(), getVL(uuid));
-                }
-            }*/
-        }
+    public int getCps(UUID uuid) {
+        return clicks.getOrDefault(uuid, 0);
     }
 
     /**
      * Click Speed Check
      */
 
-    private HashMap<Player, Integer> clicks = new HashMap<>();
+    private final Map<UUID, Integer> clicks = new HashMap<>();
 
     @EventHandler
     public void speedCheck(PlayerInteractEvent event) {
-        if (!event.getPlayer().getType().equals(EntityType.PLAYER)) {
-            return;
-        }
-        Player player = event.getPlayer();
+        if (!event.getPlayer().getType().equals(EntityType.PLAYER)) return;
+        if (!event.getAction().equals(Action.LEFT_CLICK_AIR)) return;
 
-        if (!event.getAction().equals(Action.LEFT_CLICK_AIR)) {
-            return;
-        }
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
 
         if (player.getItemInHand() != null && player.getItemInHand().getType().equals(Material.FISHING_ROD)) {
             return;
         }
 
-        if (!clicks.containsKey(player)) {
-            clicks.put(player, 0);
-        }
-        if (clicks.get(player) == 0) {
-            plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
-                @Override
-                public void run() {
-                    if (clicks.get(player) >= plugin.config.getMaxSpeed()) {
-                        if (!isEnabled()) {
-                            resetVL(player.getUniqueId());
-                            return;
-                        }
-                        plugin.logCheat(player.getUniqueId(), getName(), clicks.get(player));
-                        increaseVL(player.getUniqueId(), 3);
+        if (clicks.compute(uuid, (p, c) -> (c != null ? c : 0) + 1) == 1) {
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                Integer currClicks = clicks.get(uuid);
+
+                if (currClicks >= plugin.config.getMaxSpeed()) {
+                    if (!isEnabled()) {
+                        resetVL(player.getUniqueId());
+                        return;
                     }
-                    clicks.put(player, 0);
+                    plugin.logCheat(uuid, getName(), currClicks);
+                    increaseVL(uuid, 3);
+
                 }
+                clicks.put(uuid, 0);
             }, 20L);
         }
-        clicks.put(player, clicks.get(player) + 1);
     }
+
+    @Override
+    protected void cleanup(UUID uuid) {
+        super.cleanup(uuid);
+        clicks.remove(uuid);
+    }
+
 }
